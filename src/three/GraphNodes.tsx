@@ -1,7 +1,7 @@
-import { Billboard, Text } from '@react-three/drei';
 import { DoubleSide } from 'three';
 import { getNode } from '../domain/tree.helpers';
 import { COLORS, LAYOUT } from '../ui/ui.constants';
+import { CameraFacingLabel } from './CameraFacingLabel';
 import type { Vec3 } from './graphLayout.helpers';
 
 interface GraphNodesProps {
@@ -41,18 +41,7 @@ export function GraphNodes({ positions, currentNodeId }: GraphNodesProps) {
               />
             </mesh>
             {node.kind === 'outcome' && (
-              <Billboard position={[0, 1.4, 0]} lockX lockZ>
-                <Text
-                  fontSize={0.55}
-                  color={COLORS.textDark}
-                  anchorX="center"
-                  anchorY="middle"
-                  outlineWidth={0.04}
-                  outlineColor="#ffffff"
-                >
-                  {node.database}
-                </Text>
-              </Billboard>
+              <CameraFacingLabel text={node.database} position={[0, 1.4, 0]} />
             )}
           </group>
         );
