@@ -52,7 +52,11 @@ export function Scene({
         activeNodeId={currentNodeId}
         highlightedBranchIndex={highlightedBranchIndex}
       />
-      <GraphNodes positions={layout.positions} currentNodeId={currentNodeId} />
+      <GraphNodes
+        positions={layout.positions}
+        currentNodeId={currentNodeId}
+        isAtOutcome={isAtOutcome}
+      />
 
       <CarAvatar
         positions={layout.positions}

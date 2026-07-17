@@ -7,9 +7,14 @@ import type { Vec3 } from './graphLayout.helpers';
 interface GraphNodesProps {
   positions: Map<string, Vec3>;
   currentNodeId: string;
+  isAtOutcome: boolean;
 }
 
-export function GraphNodes({ positions, currentNodeId }: GraphNodesProps) {
+export function GraphNodes({
+  positions,
+  currentNodeId,
+  isAtOutcome,
+}: GraphNodesProps) {
   return (
     <>
       {[...positions.entries()].map(([id, pos]) => {
@@ -40,7 +45,7 @@ export function GraphNodes({ positions, currentNodeId }: GraphNodesProps) {
                 side={DoubleSide}
               />
             </mesh>
-            {node.kind === 'outcome' && (
+            {!isAtOutcome && node.kind === 'outcome' && (
               <CameraFacingLabel text={node.database} position={[0, 1.4, 0]} />
             )}
           </group>

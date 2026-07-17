@@ -1,7 +1,4 @@
-import { Text } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
-import { Group } from 'three';
+import { Html } from '@react-three/drei';
 import { COLORS } from '../ui/ui.constants';
 import type { Vec3 } from './graphLayout.helpers';
 
@@ -11,30 +8,33 @@ interface CameraFacingLabelProps {
 }
 
 /**
- * A text label that stays parallel to the camera's view plane. Unlike a
- * point-facing billboard (which rolls/skews for nodes near the screen edges
- * under perspective), copying the camera's world quaternion keeps every label
- * upright and undistorted regardless of screen position.
+ * Screen-space projected label.
+ *
+ * We intentionally render database names as DOM projected from world space
+ * instead of 3D text/billboards. World-space text will always pick up some
+ * perspective distortion/skew near the screen edges, which is exactly the bug
+ * the user reported. Html without `transform` stays flat in screen space, so
+ * it is always readable from the viewer's current POV.
  */
 export function CameraFacingLabel({ text, position }: CameraFacingLabelProps) {
-  const ref = useRef<Group>(null);
-
-  useFrame(({ camera }) => {
-    if (ref.current) ref.current.quaternion.copy(camera.quaternion);
-  });
-
   return (
-    <group ref={ref} position={position}>
-      <Text
-        fontSize={0.55}
-        color={COLORS.textDark}
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.04}
-        outlineColor="#ffffff"
+    <Html
+      position={position}
+      center
+      zIndexRange={[1, 0]}
+      style={{
+        pointerEvents: 'none',
+        zIndex: 0,
+        color: COLORS.textDark,
+        fontSize: '20px',
+        fontWeight: 700,
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+        textShadow: '0 0 2px #ffffff, 0 0 6px rgba(255,255,255,0.9)',
+        userSelect: 'none',
+      }}
       >
-        {text}
-      </Text>
-    </group>
+      {text}
+    </Html>
   );
 }
