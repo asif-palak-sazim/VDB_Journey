@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Group, MathUtils, Vector3 } from 'three';
+import { resolveNext } from '../domain/tree.helpers';
 import { COLORS } from '../ui/ui.constants';
 import { LAYOUT } from '../ui/ui.constants';
 import type { Vec3 } from './graphLayout.helpers';
@@ -8,6 +9,8 @@ import type { Vec3 } from './graphLayout.helpers';
 interface CarAvatarProps {
   positions: Map<string, Vec3>;
   currentNodeId: string;
+  /** The branch currently highlighted in the question modal (or null). */
+  highlightedBranchIndex: number | null;
 }
 
 const CAR_LIFT = 0.2;
@@ -43,12 +46,29 @@ function angleDelta(current: number, target: number): number {
  * a .glb model can replace the primitive body later without touching journey
  * logic — only the meshes inside <group> change.
  */
-export function CarAvatar({ positions, currentNodeId }: CarAvatarProps) {
+export function CarAvatar({
+  positions,
+  currentNodeId,
+  highlightedBranchIndex,
+}: CarAvatarProps) {
   const groupRef = useRef<Group>(null);
   const leanRef = useRef<Group>(null);
   const target = useRef(new Vector3());
   const speed = useRef(0);
   const initialised = useRef(false);
+
+  // World position of the highlighted branch's destination node, so the car
+  // can face it while the option is highlighted in the modal.
+  const aimAt = useRef<Vector3 | null>(null);
+  useEffect(() => {
+    if (highlightedBranchIndex == null) {
+      aimAt.current = null;
+      return;
+    }
+    const nextId = resolveNext(currentNodeId, highlightedBranchIndex);
+    const pos = nextId ? positions.get(nextId) : undefined;
+    aimAt.current = pos ? new Vector3(pos[0], pos[1], pos[2]) : null;
+  }, [currentNodeId, highlightedBranchIndex, positions]);
 
   // Update the travel target whenever the current node changes.
   useEffect(() => {
@@ -84,9 +104,19 @@ export function CarAvatar({ positions, currentNodeId }: CarAvatarProps) {
       group.position.addScaledVector(toTarget.normalize(), move);
     }
 
-    // Smoothly turn to face travel direction; lean the body into the turn.
+    // Decide which way to face: travel direction while moving, otherwise the
+    // highlighted branch's direction while parked at a question.
+    let facingDir: Vector3 | null = null;
     if (dist > 0.08) {
-      const desiredYaw = Math.atan2(toTarget.x, toTarget.z);
+      facingDir = toTarget; // already points toward the travel target
+    } else if (aimAt.current) {
+      const toAim = aimAt.current.clone().sub(group.position);
+      if (toAim.lengthSq() > 0.0001) facingDir = toAim;
+    }
+
+    // Smoothly turn toward the facing direction; lean the body into the turn.
+    if (facingDir) {
+      const desiredYaw = Math.atan2(facingDir.x, facingDir.z);
       const yawErr = angleDelta(group.rotation.y, desiredYaw);
       group.rotation.y = dampAngle(group.rotation.y, desiredYaw, dt * TURN_RATE);
       if (leanRef.current) {

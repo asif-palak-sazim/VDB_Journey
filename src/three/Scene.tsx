@@ -23,12 +23,26 @@ export function Scene({
   return (
     <>
       <color attach="background" args={[COLORS.background]} />
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[10, 18, 8]} intensity={1.4} castShadow />
+      <ambientLight intensity={0.7} />
+      <directionalLight
+        position={[12, 20, 10]}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0004}
+      >
+        {/* Widen the shadow frustum to cover the whole graph so the car's
+            shadow is computed everywhere it travels. */}
+        <orthographicCamera
+          attach="shadow-camera"
+          args={[-40, 40, 40, -40, 1, 80]}
+        />
+      </directionalLight>
 
-      {/* Low-poly ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, -20]} receiveShadow>
-        <planeGeometry args={[120, 120]} />
+      {/* Low-poly ground — sits just beneath the checkpoint mats so the car's
+          shadow lands directly under it and stays visible. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -20]} receiveShadow>
+        <planeGeometry args={[160, 160]} />
         <meshStandardMaterial color={COLORS.ground} flatShading />
       </mesh>
 
@@ -40,7 +54,11 @@ export function Scene({
       />
       <GraphNodes positions={layout.positions} currentNodeId={currentNodeId} />
 
-      <CarAvatar positions={layout.positions} currentNodeId={currentNodeId} />
+      <CarAvatar
+        positions={layout.positions}
+        currentNodeId={currentNodeId}
+        highlightedBranchIndex={highlightedBranchIndex}
+      />
       <CameraRig
         positions={layout.positions}
         currentNodeId={currentNodeId}
