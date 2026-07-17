@@ -1,4 +1,5 @@
 import { Billboard, Text } from '@react-three/drei';
+import { DoubleSide } from 'three';
 import { getNode } from '../domain/tree.helpers';
 import { COLORS, LAYOUT } from '../ui/ui.constants';
 import type { Vec3 } from './graphLayout.helpers';
@@ -25,20 +26,29 @@ export function GraphNodes({ positions, currentNodeId }: GraphNodesProps) {
           ? node.database
           : id;
 
+        // Outcome mats are a touch larger so destinations read as bigger checkpoints.
+        const matRadius = isOutcome ? LAYOUT.nodeRadius * 1.35 : LAYOUT.nodeRadius * 1.2;
+
         return (
           <group key={id} position={pos}>
-            {isOutcome ? (
-              <mesh castShadow>
-                <icosahedronGeometry args={[LAYOUT.nodeRadius, 0]} />
-                <meshStandardMaterial color={color} flatShading />
-              </mesh>
-            ) : (
-              <mesh castShadow scale={isCurrent ? 1.15 : 1}>
-                <dodecahedronGeometry args={[LAYOUT.nodeRadius, 0]} />
-                <meshStandardMaterial color={color} flatShading />
-              </mesh>
-            )}
-            <Billboard position={[0, LAYOUT.nodeRadius + 0.7, 0]}>
+            {/* Flat checkpoint mat (disc lying in the ground plane). */}
+            <mesh
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[0, 0.02, 0]}
+              receiveShadow
+            >
+              <cylinderGeometry args={[matRadius, matRadius, 0.08, 40]} />
+              <meshStandardMaterial color={color} />
+            </mesh>
+            {/* Accent ring on top for the checkpoint look; brighter when current. */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.07, 0]}>
+              <ringGeometry args={[matRadius * 0.7, matRadius * 0.85, 40]} />
+              <meshBasicMaterial
+                color={isCurrent ? COLORS.edgeHighlight : COLORS.accent}
+                side={DoubleSide}
+              />
+            </mesh>
+            <Billboard position={[0, 1.4, 0]} lockX lockZ>
               <Text
                 fontSize={0.55}
                 color={COLORS.textDark}

@@ -20,25 +20,28 @@ const FRAME_OFFSET = new Vector3(0, 7, 13);
  */
 export function CameraRig({ positions, currentNodeId, isAtOutcome }: CameraRigProps) {
   const { camera } = useThree();
-  const nodePos = useRef(new Vector3());
+  const focus = useRef(new Vector3());
+  const lookAt = useRef(new Vector3());
   const settled = useRef(false);
-  const arrivedAt = useRef<string>('');
 
   useEffect(() => {
     const pos = positions.get(currentNodeId);
     if (!pos) return;
-    nodePos.current.set(pos[0], pos[1], pos[2]);
+    // Frame the checkpoint (car sits on the mat).
+    focus.current.set(pos[0], pos[1], pos[2] + 0.3);
     settled.current = false;
-    arrivedAt.current = currentNodeId;
   }, [currentNodeId, positions]);
 
   useFrame((_, delta) => {
     const offset = isAtOutcome || settled.current ? FRAME_OFFSET : FOLLOW_OFFSET;
-    const desired = nodePos.current.clone().add(offset);
+    const desired = focus.current.clone().add(offset);
 
     const step = Math.min(1, delta * 2.2);
     camera.position.lerp(desired, step);
-    camera.lookAt(nodePos.current);
+
+    // Smoothly ease the look-at target too, so orientation never snaps.
+    lookAt.current.lerp(focus.current, Math.min(1, delta * 2.5));
+    camera.lookAt(lookAt.current);
 
     if (!settled.current && camera.position.distanceTo(desired) < 0.4) {
       settled.current = true;

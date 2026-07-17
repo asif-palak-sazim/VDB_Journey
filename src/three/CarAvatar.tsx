@@ -1,7 +1,8 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
-import { Group, Vector3 } from 'three';
+import { Group, MathUtils, Vector3 } from 'three';
 import { COLORS } from '../ui/ui.constants';
+import { LAYOUT } from '../ui/ui.constants';
 import type { Vec3 } from './graphLayout.helpers';
 
 interface CarAvatarProps {
@@ -10,6 +11,16 @@ interface CarAvatarProps {
 }
 
 const CAR_LIFT = 0.2;
+/** Park the car slightly toward the front of the flat checkpoint mat. */
+const PARK_OFFSET_Z = LAYOUT.nodeRadius * 0.6;
+
+/** Ease an angle toward a target along the shortest path (no wrap snap). */
+function dampAngle(current: number, target: number, t: number): number {
+  let delta = target - current;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+  return current + delta * MathUtils.clamp(t, 0, 1);
+}
 
 /**
  * Low-poly car built from primitives. This component is the swappable seam:
@@ -25,7 +36,8 @@ export function CarAvatar({ positions, currentNodeId }: CarAvatarProps) {
   useEffect(() => {
     const pos = positions.get(currentNodeId);
     if (!pos) return;
-    target.current.set(pos[0], pos[1] + CAR_LIFT, pos[2]);
+    // Park in front of the node rather than on top of it.
+    target.current.set(pos[0], pos[1] + CAR_LIFT, pos[2] + PARK_OFFSET_Z);
     if (!initialised.current && groupRef.current) {
       groupRef.current.position.copy(target.current);
       initialised.current = true;
@@ -37,12 +49,15 @@ export function CarAvatar({ positions, currentNodeId }: CarAvatarProps) {
     if (!group) return;
     const dir = target.current.clone().sub(group.position);
     const dist = dir.length();
-    if (dist > 0.01) {
-      // Face direction of travel.
-      group.rotation.y = Math.atan2(dir.x, dir.z);
-      // Ease toward target (frame-rate independent).
-      const step = Math.min(1, delta * 3);
-      group.position.lerp(target.current, step);
+
+    // Ease position toward target (frame-rate independent).
+    const posStep = Math.min(1, delta * 3);
+    group.position.lerp(target.current, posStep);
+
+    // Smoothly turn to face the direction of travel while actually moving.
+    if (dist > 0.05) {
+      const desiredYaw = Math.atan2(dir.x, dir.z);
+      group.rotation.y = dampAngle(group.rotation.y, desiredYaw, delta * 6);
     }
   });
 
