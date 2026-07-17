@@ -41,7 +41,7 @@ export function GraphNodes({ positions, currentNodeId }: GraphNodesProps) {
               <meshStandardMaterial color={color} />
             </mesh>
             {/* Accent ring on top for the checkpoint look; brighter when current. */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.07, 0]}>
+            <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.07, 0]}>
               <ringGeometry args={[matRadius * 0.7, matRadius * 0.85, 40]} />
               <meshBasicMaterial
                 color={isCurrent ? COLORS.edgeHighlight : COLORS.accent}
