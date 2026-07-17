@@ -22,21 +22,13 @@ export function GraphNodes({ positions, currentNodeId }: GraphNodesProps) {
             ? COLORS.questionNodeActive
             : COLORS.questionNode;
 
-        const label = isOutcome
-          ? node.database
-          : id;
-
         // Outcome mats are a touch larger so destinations read as bigger checkpoints.
         const matRadius = isOutcome ? LAYOUT.nodeRadius * 1.35 : LAYOUT.nodeRadius * 1.2;
 
         return (
           <group key={id} position={pos}>
             {/* Flat checkpoint mat (disc lying in the ground plane). */}
-            <mesh
-              rotation={[-Math.PI / 2, 0, 0]}
-              position={[0, 0.02, 0]}
-              receiveShadow
-            >
+            <mesh position={[0, 0.02, 0]} receiveShadow>
               <cylinderGeometry args={[matRadius, matRadius, 0.08, 40]} />
               <meshStandardMaterial color={color} />
             </mesh>
@@ -48,18 +40,20 @@ export function GraphNodes({ positions, currentNodeId }: GraphNodesProps) {
                 side={DoubleSide}
               />
             </mesh>
-            <Billboard position={[0, 1.4, 0]} lockX lockZ>
-              <Text
-                fontSize={0.55}
-                color={COLORS.textDark}
-                anchorX="center"
-                anchorY="middle"
-                outlineWidth={0.04}
-                outlineColor="#ffffff"
-              >
-                {label}
-              </Text>
-            </Billboard>
+            {node.kind === 'outcome' && (
+              <Billboard position={[0, 1.4, 0]} lockX lockZ>
+                <Text
+                  fontSize={0.55}
+                  color={COLORS.textDark}
+                  anchorX="center"
+                  anchorY="middle"
+                  outlineWidth={0.04}
+                  outlineColor="#ffffff"
+                >
+                  {node.database}
+                </Text>
+              </Billboard>
+            )}
           </group>
         );
       })}
