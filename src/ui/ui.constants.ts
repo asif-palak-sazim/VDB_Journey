@@ -31,6 +31,6 @@ export const DB_COLOR: Record<DatabaseName, string> = {
 /** Layout spacing (world units). */
 export const LAYOUT = {
   depthGap: 6,
-  siblingGap: 3.4,
+  siblingGap: 4.8,
   nodeRadius: 0.9,
 } as const;

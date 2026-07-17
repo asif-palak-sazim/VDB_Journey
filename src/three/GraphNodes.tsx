@@ -15,6 +15,42 @@ export function GraphNodes({
   currentNodeId,
   isAtOutcome,
 }: GraphNodesProps) {
+  const outcomeEntries = [...positions.entries()]
+    .filter(([id]) => getNode(id).kind === 'outcome')
+    .sort((a, b) => a[1][0] - b[1][0]);
+
+  const crowdedLabelOffsets = new Map<string, [number, number]>();
+  const crowdGap = LAYOUT.siblingGap * 1.35;
+  const patterns: [number, number][] = [
+    [0, -6],
+    [-18, -20],
+    [18, -20],
+    [-10, -34],
+    [10, -34],
+  ];
+
+  let i = 0;
+  while (i < outcomeEntries.length) {
+    let j = i + 1;
+    while (
+      j < outcomeEntries.length &&
+      outcomeEntries[j][1][0] - outcomeEntries[j - 1][1][0] <= crowdGap
+    ) {
+      j += 1;
+    }
+
+    const group = outcomeEntries.slice(i, j);
+    if (group.length === 1) {
+      crowdedLabelOffsets.set(group[0][0], patterns[0]);
+    } else {
+      group.forEach(([id], index) => {
+        crowdedLabelOffsets.set(id, patterns[index % patterns.length]);
+      });
+    }
+
+    i = j;
+  }
+
   return (
     <>
       {[...positions.entries()].map(([id, pos]) => {
@@ -31,7 +67,8 @@ export function GraphNodes({
         const matRadius = isOutcome ? LAYOUT.nodeRadius * 1.35 : LAYOUT.nodeRadius * 1.2;
 
         return (
-          <group key={id} position={pos}>
+          <group key={id}>
+          <group position={pos}>
             {/* Flat checkpoint mat (disc lying in the ground plane). */}
             <mesh position={[0, 0.02, 0]} receiveShadow>
               <cylinderGeometry args={[matRadius, matRadius, 0.08, 40]} />
@@ -45,9 +82,15 @@ export function GraphNodes({
                 side={DoubleSide}
               />
             </mesh>
-            {!isAtOutcome && node.kind === 'outcome' && (
-              <CameraFacingLabel text={node.database} position={[0, 1.4, 0]} />
-            )}
+          </group>
+          {!isAtOutcome && node.kind === 'outcome' && (
+            <CameraFacingLabel
+              key={`${id}-label`}
+              text={node.database}
+              position={[pos[0], pos[1], pos[2]]}
+              screenOffsetPx={crowdedLabelOffsets.get(id)}
+            />
+          )}
           </group>
         );
       })}
