@@ -11,12 +11,13 @@ interface CameraFacingLabelProps {
 }
 
 /**
- * Database name rendered as flat 3D text lying on the checkpoint mat.
+ * Database name rendered as upright 3D text standing on the checkpoint mat,
+ * like a signpost (perpendicular to the mat, not lying flat on it).
  *
  * This is part of the 3D scene graph (not a projected DOM overlay), so it can
  * never detach, drift, skew, or mis-project the way an <Html> label can — it is
- * physically glued to the node. It lies in the ground plane just above the mat
- * surface and reads toward the default camera.
+ * physically glued to the node. It stands vertically above the mat and reads
+ * toward the default camera.
  */
 export function CameraFacingLabel({
   text,
@@ -25,13 +26,12 @@ export function CameraFacingLabel({
 }: CameraFacingLabelProps) {
   return (
     <Text
-      position={[position[0], position[1] + 0.14, position[2]]}
-      rotation={[-Math.PI / 2, 0, 0]}
+      position={[position[0], position[1] + 0.2, position[2]]}
       fontSize={0.62}
       maxWidth={maxWidth * 1.6}
       color={COLORS.textDark}
       anchorX="center"
-      anchorY="middle"
+      anchorY="bottom"
       outlineWidth={0.05}
       outlineColor="#ffffff"
     >
